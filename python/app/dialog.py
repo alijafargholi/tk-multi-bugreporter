@@ -8,29 +8,32 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights 
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
-import sgtk
 import os
-import sys
-import threading
-import tempfile
 import re
+import tempfile
 
+import sgtk
 # by importing QT from sgtk rather than directly, we ensure that
 # the code will be compatible with both PySide and PyQt.
 from sgtk.platform.qt import QtCore, QtGui
+
 from .ui.dialog import Ui_Dialog
 
-screen_grab = sgtk.platform.import_framework("tk-framework-qtwidgets", "screen_grab")
-shotgun_fields = sgtk.platform.import_framework("tk-framework-qtwidgets", "shotgun_fields")
+screen_grab = sgtk.platform.import_framework("tk-framework-qtwidgets",
+                                             "screen_grab")
+shotgun_fields = sgtk.platform.import_framework("tk-framework-qtwidgets",
+                                                "shotgun_fields")
+
 
 def show_dialog(app_instance):
     """
     Shows the main dialog window.
     """
-    # in order to handle UIs seamlessly, each toolkit engine has methods for launching
-    # different types of windows. By using these methods, your windows will be correctly
-    # decorated and handled in a consistent fashion by the system. 
-    
+    # in order to handle UIs seamlessly, each toolkit engine has methods for
+    # launching different types of windows. By using these methods, your
+    # windows will be correctly decorated and handled in a consistent fashion
+    # by the system.
+
     # we pass the dialog class to this method and leave the actual construction
     # to be carried out by toolkit.
     app_instance.engine.show_dialog("Report Bugs!", app_instance, AppDialog)
@@ -40,27 +43,27 @@ class AppDialog(QtGui.QWidget):
     """
     Main application dialog window
     """
-    
+
     def __init__(self):
         """
         Constructor
         """
         # first, call the base class and let it do its thing.
-        QtGui.QWidget.__init__(self)
-        
+        super(AppDialog, self).__init__()
+
         # now load in the UI that was created in the UI designer
         self.ui = Ui_Dialog() 
         self.ui.setupUi(self)
-        
-        # most of the useful accessors are available through the Application class instance
-        # it is often handy to keep a reference to this. You can get it via the following method:
+
+        # most of the useful accessors are available through the Application
+        # class instance it is often handy to keep a reference to this. You can
+        # get it via the following method:
         self._app = sgtk.platform.current_bundle()
-        
+
         # via the self._app handle we can for example access:
         # - The engine, via self._app.engine
         # - A Shotgun API instance, via self._app.shotgun
         # - A tk API instance, via self._app.tk 
-
         self.ui.buttons.accepted.connect(self.create_ticket)
         self.ui.buttons.rejected.connect(self.close)
         self.ui.screen_grab.clicked.connect(self.screen_grab)
@@ -69,10 +72,10 @@ class AppDialog(QtGui.QWidget):
         self._cc_widget = None
 
         # The ShotgunFieldManager is a factory used to build widgets for fields
-        # associated with an entity type in Shotgun. It pulls down the schema from
-        # Shotgun asynchronously when the initialize method is called, so before
-        # we do that we need to hook up the signal it emits when it's done to our
-        # method that gets the widget we want and adds it to the UI.
+        # associated with an entity type in Shotgun. It pulls down the schema
+        #  from Shotgun asynchronously when the initialize method is called, so
+        # before we do that we need to hook up the signal it emits when it's
+        # done to our method that gets the widget we want and adds it to the UI.
         self._field_manager = shotgun_fields.ShotgunFieldManager(parent=self)
         self._field_manager.initialized.connect(self._get_shotgun_fields)
         self._field_manager.initialize()
@@ -117,12 +120,27 @@ class AppDialog(QtGui.QWidget):
         """
         # Create the new Ticket entity, pulling the project from the current
         # context, and the title, ticket body, and cc list from the UI.
+        context_info = "__Engine Name__: {}\n__Engine Version__: " \
+                       "{}\n__Context__: {}".format(self._app.engine.name,
+                                                    self._app.engine.version,
+                                                    self._app.context)
+        environment_info = "\n".join(["{} = {}".format(env, value)
+                                      for env, value in os.environ.items()])
+        description = self.ui.ticket_body.toPlainText()
+        error_log = '```\n{}\n```'.format(self.ui.error_log.toPlainText())
+
+        ticket_body = "{}\n### Description \n{}\n ### Error Log\n{}\n " \
+                      "### Environment Variable\n{}".format(context_info,
+                                                            description,
+                                                            error_log,
+                                                            environment_info)
+
         result = self._app.shotgun.create(
             "Ticket",
             dict(
                 project=self._app.context.project,
                 title=self.ui.ticket_title.text(),
-                description=self.ui.ticket_body.toPlainText(),
+                description=ticket_body,
                 addressings_cc=self._cc_widget.get_value(),
             )
         )
@@ -148,5 +166,3 @@ class AppDialog(QtGui.QWidget):
             "Ticket #%s successfully submitted!" % result["id"],
         )
         self.close()
-    
-        

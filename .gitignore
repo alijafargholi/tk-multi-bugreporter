@@ -221,3 +221,7 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+.idea/inspectionProfiles/
+.idea/vcs.xml
+Pipfile
+Pipfile.lock
