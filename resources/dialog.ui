@@ -7,17 +7,26 @@
     <x>0</x>
     <y>0</y>
     <width>452</width>
-    <height>490</height>
+    <height>559</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Report a bug!</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>5</number>
+   </property>
+   <property name="margin">
+    <number>2</number>
+   </property>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <widget class="QLabel" name="label">
+       <property name="styleSheet">
+        <string notr="true">font-weight: bold; color: #3399ff;</string>
+       </property>
        <property name="text">
         <string>Subject:</string>
        </property>
@@ -35,6 +44,9 @@
      </property>
      <item>
       <widget class="QLabel" name="cc_label">
+       <property name="styleSheet">
+        <string notr="true">font-weight: bold; color: #3399ff;</string>
+       </property>
        <property name="text">
         <string>CC:</string>
        </property>
@@ -43,7 +55,38 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="type_layout">
+     <item>
+      <widget class="QLabel" name="type_label">
+       <property name="styleSheet">
+        <string notr="true">font-weight: bold; color: #3399ff;</string>
+       </property>
+       <property name="text">
+        <string>Type:</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="priority_layout">
+     <item>
+      <widget class="QLabel" name="priority_label">
+       <property name="styleSheet">
+        <string notr="true">font-weight: bold; color: #3399ff;</string>
+       </property>
+       <property name="text">
+        <string>Priority</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <widget class="QLabel" name="label_2">
+     <property name="styleSheet">
+      <string notr="true">font-weight: bold; color: #3399ff;</string>
+     </property>
      <property name="text">
       <string>Description:</string>
      </property>
@@ -61,6 +104,9 @@
    </item>
    <item>
     <widget class="QLabel" name="label_3">
+     <property name="styleSheet">
+      <string notr="true">font-weight: bold; color: #3399ff;</string>
+     </property>
      <property name="text">
       <string>Error Log:</string>
      </property>
@@ -88,7 +134,7 @@
       <widget class="QLabel" name="screenshot">
        <property name="minimumSize">
         <size>
-         <width>50</width>
+         <width>70</width>
          <height>50</height>
         </size>
        </property>
@@ -99,10 +145,12 @@
         </size>
        </property>
        <property name="styleSheet">
-        <string notr="true">border: 1px solid grey</string>
+        <string notr="true">padding: 0;
+border: none;
+background: none;</string>
        </property>
        <property name="text">
-        <string/>
+        <string>Thumbnail</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -110,11 +158,30 @@
       </widget>
      </item>
      <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
       <widget class="QPushButton" name="screen_grab">
+       <property name="minimumSize">
+        <size>
+         <width>170</width>
+         <height>50</height>
+        </size>
+       </property>
        <property name="maximumSize">
         <size>
-         <width>16777215</width>
-         <height>16777215</height>
+         <width>1666</width>
+         <height>1666</height>
         </size>
        </property>
        <property name="text">

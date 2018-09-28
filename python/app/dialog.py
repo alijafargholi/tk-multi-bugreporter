@@ -23,6 +23,7 @@ screen_grab = sgtk.platform.import_framework("tk-framework-qtwidgets",
                                              "screen_grab")
 shotgun_fields = sgtk.platform.import_framework("tk-framework-qtwidgets",
                                                 "shotgun_fields")
+logger = sgtk.platform.get_logger(__name__)
 
 
 def show_dialog(app_instance):
@@ -52,7 +53,7 @@ class AppDialog(QtGui.QWidget):
         super(AppDialog, self).__init__()
 
         # now load in the UI that was created in the UI designer
-        self.ui = Ui_Dialog() 
+        self.ui = Ui_Dialog()
         self.ui.setupUi(self)
 
         # most of the useful accessors are available through the Application
@@ -70,6 +71,8 @@ class AppDialog(QtGui.QWidget):
 
         self._screenshot = None
         self._cc_widget = None
+        self._ticket_type_widget = None
+        self._ticket_priority_widget = None
 
         # The ShotgunFieldManager is a factory used to build widgets for fields
         # associated with an entity type in Shotgun. It pulls down the schema
@@ -101,10 +104,28 @@ class AppDialog(QtGui.QWidget):
             parent=self,
         )
 
+        self._ticket_type_widget = self._field_manager.create_widget(
+            "Ticket",
+            "sg_ticket_type",
+            parent=self,
+        )
+
+        self._ticket_priority_widget = self._field_manager.create_widget(
+            "Ticket",
+            "sg_priority",
+            parent=self,
+        )
+
         # Add our list of default users to the CC widget and then add the
         # widget to the appropriate layout.
         self._cc_widget.set_value(users)
         self.ui.cc_layout.addWidget(self._cc_widget)
+        self.ui.type_layout.addWidget(self._ticket_type_widget)
+        self.ui.priority_layout.addWidget(self._ticket_priority_widget)
+
+        # Setting defaults
+        self._ticket_type_widget.set_value("Bug")
+        self._ticket_priority_widget.set_value(5)
 
     def screen_grab(self):
         """
@@ -135,15 +156,20 @@ class AppDialog(QtGui.QWidget):
                                                             error_log,
                                                             environment_info)
 
-        result = self._app.shotgun.create(
-            "Ticket",
-            dict(
-                project=self._app.context.project,
-                title=self.ui.ticket_title.text(),
-                description=ticket_body,
-                addressings_cc=self._cc_widget.get_value(),
+        try:
+            result = self._app.shotgun.create(
+                "Ticket",
+                dict(
+                    project=self._app.context.project,
+                    title=self.ui.ticket_title.text(),
+                    description=ticket_body,
+                    addressings_cc=self._cc_widget.get_value(),
+                    sg_priority=str(self._ticket_priority_widget.get_value()),
+                    sg_ticket_type=str(self._ticket_type_widget.get_value()),
+                )
             )
-        )
+        except Exception as e:
+            logger.error(e)
 
         # If we have a screenshot that was recorded, we write that to disk as a
         # png file and then upload it to Shotgun, associating it with the Ticket
