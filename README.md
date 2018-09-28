@@ -9,12 +9,10 @@ This app originally was created by
 demonstrated in [this video](https://www.youtube.com/watch?v=bT2WlQaJVmY). I
 modified it a bit to accommodate my need in our studio.
 
-### New Features
+### Features
 * Ability to add the _error_ messages
 * Include the environment variable
 * Include the current _engine_ and _context_
-
-### Future Features
 * Specify Ticket Type _ex: bug or feature_
 * Specify the priority
 
