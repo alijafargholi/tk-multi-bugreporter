@@ -16,6 +16,18 @@ configuration:
     type: str
     default_value: ""
     description: A comma-separated list of Shotgun user names to CC by default.
+  include_env:
+    type: bool
+    default_value: false
+    description: whether or not to include the environment variable details in the ticket
+  prone_envs:
+    type: str
+    default_value: "PYTHONPATH,PATH"
+    description: A comma-separated list of environment variable to get when
+                 includeing them into the ticket. If this field has value, just
+                 these variables will be included, otherwise all variables will
+                 be included. Set this field to empty string to get all the
+                 environment variables
 
 # this app works in all engines - it does not contain 
 # any host application specific commands

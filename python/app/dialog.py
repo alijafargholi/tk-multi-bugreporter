@@ -11,6 +11,7 @@
 import os
 import re
 import tempfile
+from functools import partial
 
 import sgtk
 # by importing QT from sgtk rather than directly, we ensure that
@@ -18,6 +19,7 @@ import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
 from .ui.dialog import Ui_Dialog
+from .ui.link_dialog import Ui_link_form
 
 screen_grab = sgtk.platform.import_framework("tk-framework-qtwidgets",
                                              "screen_grab")
@@ -68,6 +70,9 @@ class AppDialog(QtGui.QWidget):
         self.ui.buttons.accepted.connect(self.create_ticket)
         self.ui.buttons.rejected.connect(self.close)
         self.ui.screen_grab.clicked.connect(self.screen_grab)
+        self.ui.bold.clicked.connect(partial(self.style, 'bold'))
+        self.ui.italic.clicked.connect(partial(self.style, 'italic'))
+        self.ui.link.clicked.connect(partial(self.style, 'link'))
 
         self._screenshot = None
         self._cc_widget = None
@@ -82,6 +87,35 @@ class AppDialog(QtGui.QWidget):
         self._field_manager = shotgun_fields.ShotgunFieldManager(parent=self)
         self._field_manager.initialized.connect(self._get_shotgun_fields)
         self._field_manager.initialize()
+
+    def style(self, style_type):
+        """Style the selected text from the Body widget to either Bold, Italic
+           or a link
+
+        :type style_type: str
+        :param style_type: style type
+        """
+        selected_test = self.ui.ticket_body.textCursor().selectedText()
+        if not selected_test:
+            return
+
+        cursor = self.ui.ticket_body.textCursor()
+        start_pos = cursor.selectionStart()
+        end_pos = cursor.selectionEnd()
+        if style_type == 'bold':
+            styled_text = "__{}__".format(selected_test)
+        elif style_type == 'italic':
+            styled_text = "_{}_".format(selected_test)
+        else:
+            link_form_ui = Ui_link_form()
+            if link_form_ui.exec_():
+                link = link_form_ui.link.text()
+                styled_text = "[{}]({})".format(selected_test, link)
+            else:
+                return
+        text = self.ui.ticket_body.toPlainText()
+        new_text = text[:start_pos] + styled_text + text[end_pos:]
+        self.ui.ticket_body.setPlainText(new_text)
 
     def _get_shotgun_fields(self):
         """
@@ -141,27 +175,48 @@ class AppDialog(QtGui.QWidget):
         """
         # Create the new Ticket entity, pulling the project from the current
         # context, and the title, ticket body, and cc list from the UI.
-        context_info = "__Engine Name__: {}\n__Engine Version__: " \
+        description = self.ui.ticket_body.toPlainText()
+        ticket_title = self.ui.ticket_title.text()
+        if not description or not ticket_title:
+            QtGui.QMessageBox.critical(
+                self,
+                'Missing Description Ticket Tile',
+                'Please make sure you have included the description and the '
+                'subject!',
+                QtGui.QMessageBox.StandardButton.Abort
+            )
+            return
+        ticket_body = description
+
+        ticket_body += "\n\n__Engine Name__: {}\n__Engine Version__: " \
                        "{}\n__Context__: {}".format(self._app.engine.name,
                                                     self._app.engine.version,
                                                     self._app.context)
-        environment_info = "\n".join(["{} = {}".format(env, value)
-                                      for env, value in os.environ.items()])
-        description = self.ui.ticket_body.toPlainText()
-        error_log = '```\n{}\n```'.format(self.ui.error_log.toPlainText())
 
-        ticket_body = "{}\n### Description \n{}\n ### Error Log\n{}\n " \
-                      "### Environment Variable\n{}".format(context_info,
-                                                            description,
-                                                            error_log,
-                                                            environment_info)
+        error_log = self.ui.error_log.toPlainText()
+        if error_log:
+            ticket_body += '\n```\n{}\n```'.format(error_log)
+
+        if self._app.get_setting("include_env", ""):
+            prone_envs = self._app.get_setting("prone_envs", "")
+            if prone_envs:
+                prone_envs = re.split(r"[,\s]+", prone_envs)
+                envs = {}
+                for env in prone_envs:
+                    envs[env] = os.environ.get(env)
+            else:
+                envs = os.environ
+            env_info = "\n".join(["**{}** = {}".format(env, value)
+                                  for env, value in envs.items()])
+
+            ticket_body += "\n### Environment Variable\n{}".format(env_info)
 
         try:
             result = self._app.shotgun.create(
                 "Ticket",
                 dict(
                     project=self._app.context.project,
-                    title=self.ui.ticket_title.text(),
+                    title=ticket_title,
                     description=ticket_body,
                     addressings_cc=self._cc_widget.get_value(),
                     sg_priority=str(self._ticket_priority_widget.get_value()),
