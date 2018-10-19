@@ -1,11 +1,11 @@
 # Copyright (c) 2013 Shotgun Software Inc.
-# 
+#
 # CONFIDENTIAL AND PROPRIETARY
-# 
-# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit 
+#
+# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit
 # Source Code License included in this distribution package. See LICENSE.
-# By accessing, using, copying or modifying this work you indicate your 
-# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights 
+# By accessing, using, copying or modifying this work you indicate your
+# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import os
@@ -66,7 +66,7 @@ class AppDialog(QtGui.QWidget):
         # via the self._app handle we can for example access:
         # - The engine, via self._app.engine
         # - A Shotgun API instance, via self._app.shotgun
-        # - A tk API instance, via self._app.tk 
+        # - A tk API instance, via self._app.tk
         self.ui.buttons.accepted.connect(self.create_ticket)
         self.ui.buttons.rejected.connect(self.close)
         self.ui.screen_grab.clicked.connect(self.screen_grab)
@@ -212,10 +212,11 @@ class AppDialog(QtGui.QWidget):
             ticket_body += "\n### Environment Variable\n{}".format(env_info)
 
         try:
+            facility_project = {'type': 'Project', 'id': 143}
             result = self._app.shotgun.create(
                 "Ticket",
                 dict(
-                    project=self._app.context.project,
+                    project=facility_project,
                     title=ticket_title,
                     description=ticket_body,
                     addressings_cc=self._cc_widget.get_value(),
