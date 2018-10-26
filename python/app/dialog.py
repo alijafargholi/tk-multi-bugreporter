@@ -158,8 +158,10 @@ class AppDialog(QtGui.QWidget):
         self.ui.priority_layout.addWidget(self._ticket_priority_widget)
 
         # Setting defaults
-        self._ticket_type_widget.set_value("Bug")
-        self._ticket_priority_widget.set_value(5)
+        type_default = self._app.get_setting("default_type", "")
+        priority_default = self._app.get_setting("default_priority", "")
+        self._ticket_type_widget.set_value(type_default)
+        self._ticket_priority_widget.set_value(priority_default)
 
     def screen_grab(self):
         """
