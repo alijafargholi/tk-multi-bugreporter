@@ -12,6 +12,12 @@
 
 # expected fields in the configuration file for this engine
 configuration:
+  project_id:
+    type: int
+    default_value: 0
+    description: Define which project the ticket is going to be submited to
+                 If it is 0, submit the ticket to the project of
+                 current context.
   default_type:
     type: str
     default_value: ""

@@ -159,8 +159,8 @@ class AppDialog(QtGui.QWidget):
 
         # Setting defaults
         type_default = self._app.get_setting("default_type", "")
-        priority_default = self._app.get_setting("default_priority", "")
         self._ticket_type_widget.set_value(type_default)
+        priority_default = self._app.get_setting("default_priority", "")
         self._ticket_priority_widget.set_value(priority_default)
 
     def screen_grab(self):
@@ -214,11 +214,15 @@ class AppDialog(QtGui.QWidget):
             ticket_body += "\n### Environment Variable\n{}".format(env_info)
 
         try:
-            facility_project = {'type': 'Project', 'id': 143}
+            if self._app.get_setting("project_id", ""):
+                project_id = self._app.get_setting("project_id", "")
+                project = {'type': 'Project', 'id': project_id}
+            else:
+                project = self._app.context.project
             result = self._app.shotgun.create(
                 "Ticket",
                 dict(
-                    project=facility_project,
+                    project=project,
                     title=ticket_title,
                     description=ticket_body,
                     addressings_cc=self._cc_widget.get_value(),
