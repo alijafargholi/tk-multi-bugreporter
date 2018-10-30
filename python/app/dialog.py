@@ -1,11 +1,11 @@
 # Copyright (c) 2013 Shotgun Software Inc.
-# 
+#
 # CONFIDENTIAL AND PROPRIETARY
-# 
-# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit 
+#
+# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit
 # Source Code License included in this distribution package. See LICENSE.
-# By accessing, using, copying or modifying this work you indicate your 
-# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights 
+# By accessing, using, copying or modifying this work you indicate your
+# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import os
@@ -66,7 +66,7 @@ class AppDialog(QtGui.QWidget):
         # via the self._app handle we can for example access:
         # - The engine, via self._app.engine
         # - A Shotgun API instance, via self._app.shotgun
-        # - A tk API instance, via self._app.tk 
+        # - A tk API instance, via self._app.tk
         self.ui.buttons.accepted.connect(self.create_ticket)
         self.ui.buttons.rejected.connect(self.close)
         self.ui.screen_grab.clicked.connect(self.screen_grab)
@@ -158,8 +158,10 @@ class AppDialog(QtGui.QWidget):
         self.ui.priority_layout.addWidget(self._ticket_priority_widget)
 
         # Setting defaults
-        self._ticket_type_widget.set_value("Bug")
-        self._ticket_priority_widget.set_value(5)
+        type_default = self._app.get_setting("default_type", "")
+        self._ticket_type_widget.set_value(type_default)
+        priority_default = self._app.get_setting("default_priority", "")
+        self._ticket_priority_widget.set_value(priority_default)
 
     def screen_grab(self):
         """
@@ -212,10 +214,14 @@ class AppDialog(QtGui.QWidget):
             ticket_body += "\n### Environment Variable\n{}".format(env_info)
 
         try:
+            project_id = self._app.get_setting("project_id", "")
+            project = {'type': 'Project', 'id': project_id}
+            if not project_id:
+                project = self._app.context.project
             result = self._app.shotgun.create(
                 "Ticket",
                 dict(
-                    project=self._app.context.project,
+                    project=project,
                     title=ticket_title,
                     description=ticket_body,
                     addressings_cc=self._cc_widget.get_value(),
