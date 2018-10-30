@@ -214,10 +214,9 @@ class AppDialog(QtGui.QWidget):
             ticket_body += "\n### Environment Variable\n{}".format(env_info)
 
         try:
-            if self._app.get_setting("project_id", ""):
-                project_id = self._app.get_setting("project_id", "")
-                project = {'type': 'Project', 'id': project_id}
-            else:
+            project_id = self._app.get_setting("project_id", "")
+            project = {'type': 'Project', 'id': project_id}
+            if not project_id:
                 project = self._app.context.project
             result = self._app.shotgun.create(
                 "Ticket",
