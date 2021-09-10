@@ -13,7 +13,8 @@
 # The path to output all built .py files to: 
 UI_PYTHON_PATH=../python/app/ui
 
-
+source C:/work/Programming/Python2_venv/Scripts/activate
+    
 # Helper functions to build UI files
 function build_qt {
     echo " > Building " $2
@@ -22,7 +23,7 @@ function build_qt {
     $1 $2 > $UI_PYTHON_PATH/$3.py
     
     # replace PySide imports with tank.platform.qt and remove line containing Created by date
-    sed -i "" -e "s/from PySide import/from tank.platform.qt import/g" -e "/# Created:/d" $UI_PYTHON_PATH/$3.py
+    sed -i -e "s/from PySide import/from tank.platform.qt import/g"  $UI_PYTHON_PATH/$3.py
 }
 
 function build_ui {
@@ -30,7 +31,7 @@ function build_ui {
 }  
 
 function build_res {
-    build_qt "pyside-rcc" "$1.qrc" "$1_rc"
+    build_qt "C:/work/Programming/Python2_venv/Lib/site-packages/PySide/pyside-rcc -py3" "$1.qrc" "$1_rc"
 }
 
 
@@ -42,3 +43,5 @@ build_ui dialog
 # build resources
 echo "building resources..."
 build_res resources
+
+read

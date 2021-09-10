@@ -12,6 +12,8 @@ import os
 import re
 import tempfile
 from functools import partial
+import threading
+from multiprocessing import Queue, Process
 
 import sgtk
 # by importing QT from sgtk rather than directly, we ensure that
@@ -21,10 +23,12 @@ from sgtk.platform.qt import QtCore, QtGui
 from .ui.dialog import Ui_Dialog
 from .ui.link_dialog import Ui_link_form
 
-screen_grab = sgtk.platform.import_framework("tk-framework-qtwidgets",
-                                             "screen_grab")
-shotgun_fields = sgtk.platform.import_framework("tk-framework-qtwidgets",
-                                                "shotgun_fields")
+screen_grab = sgtk.platform.import_framework("tk-framework-qtwidgets", "screen_grab")
+shotgun_fields = sgtk.platform.import_framework("tk-framework-qtwidgets", "shotgun_fields")
+
+# import the overlay module from the qtwidgets framework
+overlay = sgtk.platform.import_framework("tk-framework-qtwidgets", "overlay_widget")
+
 logger = sgtk.platform.get_logger(__name__)
 
 
@@ -46,6 +50,7 @@ class AppDialog(QtGui.QWidget):
     """
     Main application dialog window
     """
+    submitted = False
 
     def __init__(self):
         """
@@ -67,7 +72,7 @@ class AppDialog(QtGui.QWidget):
         # - The engine, via self._app.engine
         # - A Shotgun API instance, via self._app.shotgun
         # - A tk API instance, via self._app.tk
-        self.ui.buttons.accepted.connect(self.create_ticket)
+        self.ui.buttons.accepted.connect(self.init_create_ticket)
         self.ui.buttons.rejected.connect(self.close)
         self.ui.screen_grab.clicked.connect(self.screen_grab)
         self.ui.bold.clicked.connect(partial(self.style, 'bold'))
@@ -78,6 +83,10 @@ class AppDialog(QtGui.QWidget):
         self._cc_widget = None
         self._ticket_type_widget = None
         self._ticket_priority_widget = None
+
+        # add an overlay to the publish view to show messages while querying
+        self._overlay_widget = overlay.ShotgunOverlayWidget(self)
+
 
         # The ShotgunFieldManager is a factory used to build widgets for fields
         # associated with an entity type in Shotgun. It pulls down the schema
@@ -132,6 +141,7 @@ class AppDialog(QtGui.QWidget):
 
         # Create the widget that the user will use to view the default CC
         # list, plus enter in any additional users if the choose to do so.
+
         self._cc_widget = self._field_manager.create_widget(
             "Ticket",
             "addressings_cc",
@@ -171,12 +181,12 @@ class AppDialog(QtGui.QWidget):
         self._screenshot = pixmap
         self.ui.screenshot.setPixmap(pixmap.scaled(100, 100))
 
-    def create_ticket(self):
+    def init_create_ticket(self):
         """
-        Creates a new Ticket entity in Shotgun from the contents of the dialog.
+        
         """
-        # Create the new Ticket entity, pulling the project from the current
-        # context, and the title, ticket body, and cc list from the UI.
+        
+
         description = self.ui.ticket_body.toPlainText()
         ticket_title = self.ui.ticket_title.text()
         if not description or not ticket_title:
@@ -188,6 +198,41 @@ class AppDialog(QtGui.QWidget):
                 QtGui.QMessageBox.StandardButton.Abort
             )
             return
+
+        self.submitted = False
+        self._overlay_widget.start_spin()
+        # self.create_ticket()
+        
+        logger.info("created queue")
+        the_thread = threading.Thread(target=self.create_ticket)
+        logger.info("created Thread")
+        the_thread.setDaemon(True)
+        the_thread.start()
+        logger.info("start Thread")
+        
+        self.timer = QtCore.QTimer(self)
+        self.timer.setSingleShot(False)
+        logger.info("created timer")
+        self.timer.timeout.connect(self.finalize)
+        logger.info("connected queue")
+        self.timer.start(1000)
+        logger.info("start timer")
+
+        # the_thread.join()
+        
+
+    def create_ticket(self):
+        """
+        Creates a new Ticket entity in Shotgun from the contents of the dialog.
+        """
+
+        logger.info("in craete ticket")
+
+        # Create the new Ticket entity, pulling the project from the current
+        # context, and the title, ticket body, and cc list from the UI.
+        description = self.ui.ticket_body.toPlainText()
+        ticket_title = self.ui.ticket_title.text()
+       
         ticket_body = description
 
         ticket_body += "\n\n__Engine Name__: {}\n__Engine Version__: " \
@@ -230,6 +275,7 @@ class AppDialog(QtGui.QWidget):
                 )
             )
         except Exception as e:
+            self._overlay_widget.show_error_message("Error. %s" % e)
             logger.error(e)
 
         # If we have a screenshot that was recorded, we write that to disk as a
@@ -247,9 +293,24 @@ class AppDialog(QtGui.QWidget):
                 "attachments",
             )
 
-        QtGui.QMessageBox.information(
-            self,
-            "Ticket successfully created!",
-            "Ticket #%s successfully submitted!" % result["id"],
-        )
-        self.close()
+        logger.info("craete ticket done")
+        
+        logger.info("queue written")
+
+        self.submitted = True
+        logger.info("self submitted : %s" % self.submitted)
+        
+        # self._overlay_widget.hide()
+        # self.the_thread.terminate()
+
+    def finalize(self):
+        logger.info("finalize")
+        if self.submitted:
+            self.timer.stop()
+            self._overlay_widget.hide()
+            QtGui.QMessageBox.information(
+                self,
+                "Ticket successfully created!",
+                "Ticket successfully submitted!" ,
+            )
+            self.close()

@@ -2,7 +2,8 @@
 
 # Form implementation generated from reading ui file 'dialog.ui'
 #
-#      by: pyside-uic 0.2.15 running on PySide 1.2.2
+# Created: Fri Sep 10 13:27:50 2021
+#      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -134,6 +135,7 @@ class Ui_Dialog(object):
         self.italic.setText(QtGui.QApplication.translate("Dialog", "Italic", None, QtGui.QApplication.UnicodeUTF8))
         self.link.setText(QtGui.QApplication.translate("Dialog", "Link", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("Dialog", "Error Log:", None, QtGui.QApplication.UnicodeUTF8))
+        self.screenshot.setText(QtGui.QApplication.translate("Dialog", "Thumbnail", None, QtGui.QApplication.UnicodeUTF8))
         self.screen_grab.setText(QtGui.QApplication.translate("Dialog", "Take a screenshot!", None, QtGui.QApplication.UnicodeUTF8))
 
 from . import resources_rc

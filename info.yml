@@ -28,7 +28,7 @@ configuration:
     description: Tikect priority by default.
   cc:
     type: str
-    default_value: ""
+    default_value: "sergey.nezhentsev"
     description: A comma-separated list of Shotgun user names to CC by default.
   include_env:
     type: bool
