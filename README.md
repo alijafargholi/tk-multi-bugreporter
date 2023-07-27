@@ -1,3 +1,6 @@
+[![Code Climate](https://codeclimate.com/github/alijafargholi/tk-multi-bugreporter.png)](https://codeclimate.com/github/alijafargholi/tk-multi-bugreporter)
+
+
 # Bug-Reporter App
 A Shotgun app for submit ticket for reporting bugs and request.
 
